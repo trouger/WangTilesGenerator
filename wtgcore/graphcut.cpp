@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "graphcut.h"
 #include <iostream>
-#include <vector>
-#include <queue>
 
 // patch a, which is a cornor-colored tile, is put on a layer over patch b.
 graphcut_t::graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_t patch_b)
@@ -62,7 +60,7 @@ void graphcut_t::bfs(bool stop_on_sink)
 		graph.nodes[i].prev_edge = NULL;
 	}
 
-	std::queue<node_t *> bfs_queue;
+	while (bfs_queue.size() > 0) bfs_queue.pop();
 	bfs_queue.push(&source);
 	source.prev = &source;
 
@@ -70,9 +68,9 @@ void graphcut_t::bfs(bool stop_on_sink)
 	{
 		node_t &cur = *bfs_queue.front();
 		bfs_queue.pop();
-		for (size_t i = 0; i < cur.neighbors.size(); i++)
+		for (auto it = cur.neighbors.begin(), itend = cur.neighbors.end(); it != itend; ++it)
 		{
-			edge_t &edge = cur.neighbors[i];
+			edge_t &edge = *it;
 			node_t &next = *edge.node;
 			if (next.prev != NULL) continue;
 			if (edge.capacity == infinite_capacity || edge.flow < edge.capacity)
@@ -136,7 +134,7 @@ void graphcut_t::compute_cut_mask(image_t mask_image, patch_t mask_patch)
 		for (int x = 0; x < patch_size; x++)
 		{
 			bool reachable = get_pixel_node(x, y).prev != NULL;
-			mask_image.set_pixel(x, y, reachable ? color_t(1, 1, 1) : color_t(0, 0, 0));
+			mask_image.set_pixel(x + mask_patch.x, y + mask_patch.y, reachable ? color_t(255, 255, 255) : color_t(0, 0, 0));
 		}
 	}
 }

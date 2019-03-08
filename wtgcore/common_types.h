@@ -71,6 +71,11 @@ struct vector3_t
 		return vector3_t(x - other.x, y - other.y, z - other.z);
 	}
 
+	vector3_t operator * (float k)
+	{
+		return vector3_t(x * k, y * k, z * k);
+	}
+
 	inline value_t sqrmagnitude() const
 	{
 		return x * x + y * y + z * z;
@@ -86,5 +91,9 @@ typedef vector3_t<float> vector3f_t;
 
 inline vector3f_t get_vector3f(color_t c)
 {
-	return vector3f_t(c.r, c.g, c.b);
+	return vector3f_t(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f);
+}
+inline color_t get_color(vector3f_t v)
+{
+	return color_t(int(v.x * 255.0f), int(v.y * 255.0f), int(v.z * 255.0f));
 }

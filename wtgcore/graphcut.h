@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <queue>
 #include "common_types.h"
 
 struct node_t;
@@ -58,4 +59,6 @@ private:
 
 	graph_t graph;
 	int patch_size;
+
+	std::queue<node_t *> bfs_queue;
 };

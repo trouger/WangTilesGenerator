@@ -137,12 +137,29 @@ void wangtiles_t::generate_wang_tiles()
 	{
 		for (int col = 0; col < num_tiles; col++)
 		{
+			std::cout << "calculating graphcut for tile " << row * num_tiles + col << " of " << num_tiles * num_tiles << "\n";
 			patch_t patch;
 			patch.size = tile_size;
 			patch.x = col * tile_size;
 			patch.y = row * tile_size;
 			graphcut_t graphcut(packed_cornors, patch, source_image, patch);
 			graphcut.compute_cut_mask(packed_cornors_mask, patch);
+		}
+	}
+
+	// blend the two layers
+	std::cout << "blending layers\n";
+	packed_wang_tiles.clear();
+	packed_wang_tiles.init(resolution);
+	for (int y = 0; y < resolution; y++)
+	{
+		for (int x = 0; x < resolution; x++)
+		{
+			vector3f_t color0 = get_vector3f(source_image.get_pixel(x, y));
+			vector3f_t color1 = get_vector3f(packed_cornors.get_pixel(x, y));
+			float mask = packed_cornors_mask.get_pixel(x, y).r / 255.0f;
+			vector3f_t color = color0 * (1.0f - mask) + color1 * mask;
+			packed_wang_tiles.set_pixel(x, y, get_color(color));
 		}
 	}
 }
