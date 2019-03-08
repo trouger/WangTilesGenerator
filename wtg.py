@@ -3,7 +3,7 @@ import sys
 from subprocess import Popen
 from PIL import Image, ImageFilter
 
-core_executable = os.path.join(os.path.dirname(__file__), 'wtgcore/Debug/wtgcore.exe')
+core_executable = os.path.join(os.path.dirname(__file__), 'wtgcore/x64/Release/wtgcore.exe')
 
 def main():
 	input = sys.argv[1]
