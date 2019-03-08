@@ -24,6 +24,12 @@
     <ClInclude Include="wangtiles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="graphcut.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jobsystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -33,6 +39,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wangtiles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="graphcut.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jobsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

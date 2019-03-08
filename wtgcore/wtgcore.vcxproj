@@ -153,11 +153,13 @@
   <ItemGroup>
     <ClInclude Include="common_types.h" />
     <ClInclude Include="graphcut.h" />
+    <ClInclude Include="jobsystem.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="wangtiles.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="graphcut.cpp" />
+    <ClCompile Include="jobsystem.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

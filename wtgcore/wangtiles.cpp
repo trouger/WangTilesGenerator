@@ -1,7 +1,9 @@
 #include "pch.h"
 #include <iostream>
+#include <mutex>
 #include "wangtiles.h"
 #include "graphcut.h"
+#include "jobsystem.h"
 
 // This is from Figure 9 of the paper "An Alternative for Wang Tiles: Colored Edges versus Colored Corners".
 // Four cornor colors are encoded as 0, 1, 2, 3.
@@ -133,19 +135,29 @@ void wangtiles_t::generate_wang_tiles()
 	
 	packed_cornors_mask.clear();
 	packed_cornors_mask.init(resolution);
+
+	jobsystem_t jobsystem;
+	std::mutex mutex;
 	for (int row = 0; row < num_tiles; row++)
 	{
 		for (int col = 0; col < num_tiles; col++)
 		{
-			std::cout << "calculating graphcut for tile " << row * num_tiles + col << " of " << num_tiles * num_tiles << "\n";
-			patch_t patch;
-			patch.size = tile_size;
-			patch.x = col * tile_size;
-			patch.y = row * tile_size;
-			graphcut_t graphcut(packed_cornors, patch, source_image, patch);
-			graphcut.compute_cut_mask(packed_cornors_mask, patch);
+			jobsystem.addjob([=, &mutex]()
+			{
+				mutex.lock();
+				std::cout << "calculating graphcut for tile " << row * num_tiles + col << " of " << num_tiles * num_tiles << "\n";
+				mutex.unlock();
+				patch_t patch;
+				patch.size = tile_size;
+				patch.x = col * tile_size;
+				patch.y = row * tile_size;
+				graphcut_t graphcut(packed_cornors, patch, source_image, patch);
+				graphcut.compute_cut_mask(packed_cornors_mask, patch); 
+			});
 		}
 	}
+	jobsystem.startjobs();
+	jobsystem.wait();
 
 	// blend the two layers
 	std::cout << "blending layers\n";
