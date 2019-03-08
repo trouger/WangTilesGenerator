@@ -98,8 +98,7 @@ void graphcut_t::compute_cut_mask(image_t mask_image, patch_t mask_patch)
 	// calculate the max flow of the graph
 	node_t &source = get_source_node();
 	node_t &sink = get_sink_node();
-	int counter = 0;
-	while (++counter)
+	while (1)
 	{
 		// find augmenting path
 		bfs(true);
@@ -122,12 +121,12 @@ void graphcut_t::compute_cut_mask(image_t mask_image, patch_t mask_patch)
 		pnode = &sink;
 		while (pnode != &source)
 		{
-			edge_t *edge = pnode->prev_edge;
-			edge->flow += flow;
-			edge->inv_edge->flow = - edge->flow;
+			edge_t &edge = *pnode->prev_edge;
+			edge_t &inv_edge = edge.node->neighbors[edge.inv_edge_index];
+			edge.flow += flow;
+			inv_edge.flow = -edge.flow;
 			pnode = pnode->prev;
 		}
-		std::cout << counter << ": add flow " << flow << std::endl;
 	}
 	// find the cut by the reachable set from source in the residual graph
 	bfs(false);
@@ -159,8 +158,8 @@ void graphcut_t::make_edge(int x0, int y0, int x1, int y1)
 	node1.neighbors.emplace_back(&node0, cost);
 	edge_t &edge0 = node0.neighbors.back();
 	edge_t &edge1 = node1.neighbors.back();
-	edge0.inv_edge = &edge1;
-	edge1.inv_edge = &edge0;
+	edge0.inv_edge_index = node1.neighbors.size() - 1;
+	edge1.inv_edge_index = node0.neighbors.size() - 1;
 }
 
 void graphcut_t::make_edge(int x, int y, node_t & src_or_sink)
@@ -171,6 +170,6 @@ void graphcut_t::make_edge(int x, int y, node_t & src_or_sink)
 
 	edge_t &edge0 = node.neighbors.back();
 	edge_t &edge1 = src_or_sink.neighbors.back();
-	edge0.inv_edge = &edge1;
-	edge1.inv_edge = &edge0;
+	edge0.inv_edge_index = src_or_sink.neighbors.size() - 1;
+	edge1.inv_edge_index = node.neighbors.size() - 1;
 }

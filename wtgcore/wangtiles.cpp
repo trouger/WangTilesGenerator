@@ -131,6 +131,8 @@ void wangtiles_t::generate_wang_tiles()
 	const int num_tiles = num_colors * num_colors;
 	const int tile_size = resolution / num_tiles;
 	
+	packed_cornors_mask.clear();
+	packed_cornors_mask.init(resolution);
 	for (int row = 0; row < num_tiles; row++)
 	{
 		for (int col = 0; col < num_tiles; col++)

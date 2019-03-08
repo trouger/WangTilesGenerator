@@ -11,10 +11,10 @@ struct edge_t
 	node_t *node;
 	float capacity;
 	float flow;
-	edge_t *inv_edge;
+	size_t inv_edge_index;
 
 	edge_t(node_t *node, float capacity)
-		:node(node), capacity(capacity), flow(0), inv_edge(NULL) { }
+		:node(node), capacity(capacity), flow(0), inv_edge_index(-1) { }
 };
 
 struct node_t
