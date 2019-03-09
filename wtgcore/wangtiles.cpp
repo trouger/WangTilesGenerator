@@ -136,6 +136,8 @@ void wangtiles_t::generate_wang_tiles()
 	packed_cornors_mask.clear();
 	packed_cornors_mask.init(resolution);
 
+	generate_graphcut_constraints();
+
 	jobsystem_t jobsystem;
 	std::mutex mutex;
 	std::vector<algorithm_statistics_t> statistics(num_tiles * num_tiles);
@@ -153,7 +155,7 @@ void wangtiles_t::generate_wang_tiles()
 				patch.size = tile_size;
 				patch.x = col * tile_size;
 				patch.y = row * tile_size;
-				graphcut_t graphcut(packed_cornors, patch, source_image, patch);
+				graphcut_t graphcut(packed_cornors, patch, source_image, patch, graphcut_constraints);
 				graphcut.compute_cut_mask(packed_cornors_mask, patch, statistics[tileindex]); 
 			});
 		}
@@ -181,5 +183,36 @@ void wangtiles_t::generate_wang_tiles()
 			vector3f_t color = color0 * (1.0f - mask) + color1 * mask;
 			packed_wang_tiles.set_pixel(x, y, get_color(color));
 		}
+	}
+}
+
+void wangtiles_t::generate_graphcut_constraints()
+{
+	const int resolution = source_image.resolution;
+	const int num_tiles = num_colors * num_colors;
+	const int tile_size = resolution / num_tiles;
+	const int half_tile_size = tile_size >> 1;
+
+	graphcut_constraints.clear();
+	graphcut_constraints.init(tile_size);
+
+	for (int i = 0; i < tile_size * tile_size; i++)
+		graphcut_constraints.pixels[i] = CONSTRAINT_COLOR_FREE;
+
+	for (int p = 0; p < tile_size; p++)
+	{
+		graphcut_constraints.set_pixel(p, 0, CONSTRAINT_COLOR_SOURCE);
+		graphcut_constraints.set_pixel(p, tile_size - 1, CONSTRAINT_COLOR_SOURCE);
+		if (p == 0 || p == tile_size - 1) continue;
+
+		graphcut_constraints.set_pixel(0, p, CONSTRAINT_COLOR_SOURCE);
+		graphcut_constraints.set_pixel(tile_size - 1, p, CONSTRAINT_COLOR_SOURCE);
+
+		graphcut_constraints.set_pixel(p, half_tile_size - 1, CONSTRAINT_COLOR_SINK);
+		graphcut_constraints.set_pixel(p, half_tile_size, CONSTRAINT_COLOR_SINK);
+		if (p == half_tile_size - 1 || p == half_tile_size) continue;
+
+		graphcut_constraints.set_pixel(half_tile_size - 1, p, CONSTRAINT_COLOR_SINK);
+		graphcut_constraints.set_pixel(half_tile_size, p, CONSTRAINT_COLOR_SINK);
 	}
 }

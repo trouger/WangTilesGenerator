@@ -11,6 +11,11 @@ struct color_t
 	color_t() { }
 	color_t(int r, int g, int b)
 		: r((unsigned char)r), g((unsigned char)g), b((unsigned char)b) { }
+
+	bool operator == (const color_t &other)
+	{
+		return r == other.r && g == other.g && b == other.b;
+	}
 };
 
 struct image_t
@@ -97,3 +102,7 @@ inline color_t get_color(vector3f_t v)
 {
 	return color_t(int(v.x * 255.0f), int(v.y * 255.0f), int(v.z * 255.0f));
 }
+
+#define CONSTRAINT_COLOR_SOURCE		color_t(1, 2, 3)
+#define CONSTRAINT_COLOR_SINK		color_t(3, 2, 1)
+#define CONSTRAINT_COLOR_FREE		color_t(4, 5, 6)

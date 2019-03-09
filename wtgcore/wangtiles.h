@@ -16,6 +16,10 @@ public:
 	image_t get_packed_cornors() { return packed_cornors; }
 	image_t get_packed_cornors_mask() { return packed_cornors_mask; }
 	image_t get_packed_wang_tiles() { return packed_wang_tiles; }
+	image_t get_graphcut_constraints() { return graphcut_constraints; }
+
+private:
+	void generate_graphcut_constraints();
 
 private:
 	image_t source_image;
@@ -26,5 +30,6 @@ private:
 	image_t packed_cornors;
 	image_t packed_cornors_mask;
 	image_t packed_wang_tiles;
+	image_t graphcut_constraints;
 };
 

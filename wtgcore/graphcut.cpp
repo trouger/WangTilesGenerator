@@ -2,8 +2,9 @@
 #include "graphcut.h"
 #include <iostream>
 
-// patch a, which is a cornor-colored tile, is put on a layer over patch b.
-graphcut_t::graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_t patch_b)
+// patch a (the source) is put on a layer over patch b (the sink).
+// this class generates a best-matching mask of patch a, given the initial constraints.
+graphcut_t::graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_t patch_b, image_t constraints)
 	:image_a(image_a), patch_a(patch_a), image_b(image_b), patch_b(patch_b)
 {
 	patch_size = patch_a.size;
@@ -25,25 +26,18 @@ graphcut_t::graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_
 	}
 	node_t &source = get_source_node();
 	node_t &sink = get_sink_node();
-	int half_patch_size = patch_size >> 1;
 
-	for (int p = 0; p < patch_size; p++)
+	for (int y = 0; y < patch_size; y++)
 	{
-		make_edge(p, 0, source);
-		make_edge(p, patch_size - 1, source);
-		if (p == 0 || p == patch_size - 1) continue;
-		
-		make_edge(0, p, source);
-		make_edge(patch_size - 1, p, source);
-
-		make_edge(p, half_patch_size - 1, sink);
-		make_edge(p, half_patch_size, sink);
-		if (p == half_patch_size - 1 || p == half_patch_size) continue;
-
-		make_edge(half_patch_size - 1, p, sink);
-		make_edge(half_patch_size, p, sink);
+		for (int x = 0; x < patch_size; x++)
+		{
+			color_t constraint = constraints.get_pixel(x, y);
+			if (constraint == CONSTRAINT_COLOR_SOURCE)
+				make_edge(x, y, source);
+			else if (constraint == CONSTRAINT_COLOR_SINK)
+				make_edge(x, y, sink);
+		}
 	}
-
 }
 
 graphcut_t::~graphcut_t()

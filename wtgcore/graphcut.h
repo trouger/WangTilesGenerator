@@ -42,7 +42,7 @@ struct algorithm_statistics_t
 class graphcut_t
 {
 public:
-	graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_t patch_b);
+	graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_t patch_b, image_t constraints);
 	~graphcut_t();
 
 	void compute_cut_mask(image_t mask_image, patch_t mask_patch, algorithm_statistics_t &statistics);
