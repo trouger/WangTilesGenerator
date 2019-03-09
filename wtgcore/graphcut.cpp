@@ -156,7 +156,9 @@ void graphcut_t::make_edge(int x0, int y0, int x1, int y1)
 	vector3f_t a1 = get_vector3f(image_a.get_pixel(patch_a.x + x1, patch_a.y + y1));
 	vector3f_t b0 = get_vector3f(image_b.get_pixel(patch_b.x + x0, patch_b.y + y0));
 	vector3f_t b1 = get_vector3f(image_b.get_pixel(patch_b.x + x1, patch_b.y + y1));
-	float cost = (a0 - b0).magnitude() + (a1 - b1).magnitude() + 1.0f;
+	float cost = (a0 - b0).magnitude() + (a1 - b1).magnitude();
+	float gradient = (a0 - a1).magnitude() + (b0 - b1).magnitude();
+	cost /= gradient + 1e-3f;
 	
 	node0.neighbors.emplace_back(&node1, cost);
 	node1.neighbors.emplace_back(&node0, cost);
