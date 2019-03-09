@@ -138,26 +138,34 @@ void wangtiles_t::generate_wang_tiles()
 
 	jobsystem_t jobsystem;
 	std::mutex mutex;
+	std::vector<algorithm_statistics_t> statistics(num_tiles * num_tiles);
 	for (int row = 0; row < num_tiles; row++)
 	{
 		for (int col = 0; col < num_tiles; col++)
 		{
-			jobsystem.addjob([=, &mutex]()
+			jobsystem.addjob([=, &mutex, &statistics]()
 			{
+				int tileindex = row * num_tiles + col;
 				mutex.lock();
-				std::cout << "calculating graphcut for tile " << row * num_tiles + col << " of " << num_tiles * num_tiles << "\n";
+				std::cout << "calculating graphcut for tile " << tileindex << " of " << num_tiles * num_tiles << "\n";
 				mutex.unlock();
 				patch_t patch;
 				patch.size = tile_size;
 				patch.x = col * tile_size;
 				patch.y = row * tile_size;
 				graphcut_t graphcut(packed_cornors, patch, source_image, patch);
-				graphcut.compute_cut_mask(packed_cornors_mask, patch); 
+				graphcut.compute_cut_mask(packed_cornors_mask, patch, statistics[tileindex]); 
 			});
 		}
 	}
 	jobsystem.startjobs();
 	jobsystem.wait();
+
+	for (int i = 0; i < statistics.size(); i++)
+	{
+		auto stat = statistics[i];
+		std::cout << "found max-flow for tile " << i << " after " << stat.iteration_count << " iterations: " << stat.max_flow << std::endl;
+	}
 
 	// blend the two layers
 	std::cout << "blending layers\n";

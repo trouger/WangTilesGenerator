@@ -33,13 +33,19 @@ struct graph_t
 	std::vector<node_t> nodes;
 };
 
+struct algorithm_statistics_t
+{
+	unsigned int iteration_count;
+	float max_flow;
+};
+
 class graphcut_t
 {
 public:
 	graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_t patch_b);
 	~graphcut_t();
 
-	void compute_cut_mask(image_t mask_image, patch_t mask_patch);
+	void compute_cut_mask(image_t mask_image, patch_t mask_patch, algorithm_statistics_t &statistics);
 
 private:
 	node_t &get_pixel_node(int x, int y) { return graph.nodes[y * patch_size + x]; }

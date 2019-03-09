@@ -85,19 +85,22 @@ void graphcut_t::bfs(bool stop_on_sink)
 }
 
 // get a mask which should be applied to patch a
-void graphcut_t::compute_cut_mask(image_t mask_image, patch_t mask_patch)
+void graphcut_t::compute_cut_mask(image_t mask_image, patch_t mask_patch, algorithm_statistics_t &statistics)
 {
 	if (patch_size != mask_patch.size)
 	{
 		std::cerr << "invalid mask patch size\n";
 		exit(-1);
 	}
+	statistics.iteration_count = 0;
+	statistics.max_flow = 0;
 
 	// calculate the max flow of the graph
 	node_t &source = get_source_node();
 	node_t &sink = get_sink_node();
 	while (1)
 	{
+		statistics.iteration_count++;
 		// find augmenting path
 		bfs(true);
 		if (sink.prev == NULL) break;
@@ -125,6 +128,7 @@ void graphcut_t::compute_cut_mask(image_t mask_image, patch_t mask_patch)
 			inv_edge.flow = -edge.flow;
 			pnode = pnode->prev;
 		}
+		statistics.max_flow += flow;
 	}
 	// find the cut by the reachable set from source in the residual graph
 	bfs(false);
