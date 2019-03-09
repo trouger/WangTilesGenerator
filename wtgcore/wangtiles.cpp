@@ -65,7 +65,7 @@ void wangtiles_t::pick_colored_patches()
 	colored_patches.clear();
 
 	patch_t patch;
-	patch.size = tile_size * 2;
+	patch.size = tile_size;
 	patch.x = patch.y = 0;
 	colored_patches.push_back(patch);
 
@@ -90,7 +90,7 @@ void wangtiles_t::generate_packed_cornors()
 {
 	const int num_tiles = num_colors * num_colors;
 	const int patch_size = colored_patches[0].size;
-	const int tile_size = patch_size >> 1;
+	const int tile_size = patch_size;
 	const int half_tile_size = tile_size >> 1;
 	const int resolution = source_image.resolution;
 	packed_cornors.clear();
