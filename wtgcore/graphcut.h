@@ -62,6 +62,7 @@ private:
 	patch_t patch_a;
 	image_t image_b;
 	patch_t patch_b;
+	image_t constraints;
 
 	graph_t graph;
 	int patch_size;

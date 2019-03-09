@@ -5,7 +5,7 @@
 // patch a (the source) is put on a layer over patch b (the sink).
 // this class generates a best-matching mask of patch a, given the initial constraints.
 graphcut_t::graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_t patch_b, image_t constraints)
-	:image_a(image_a), patch_a(patch_a), image_b(image_b), patch_b(patch_b)
+	:image_a(image_a), patch_a(patch_a), image_b(image_b), patch_b(patch_b), constraints(constraints)
 {
 	patch_size = patch_a.size;
 	if (patch_size < 2 || patch_size != patch_b.size)
@@ -14,16 +14,7 @@ graphcut_t::graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_
 		exit(-1);
 	}
 	graph.nodes.resize(patch_size * patch_size + 2);
-	for (int y = 0; y < patch_size; y++)
-	{
-		for (int x = 0; x < patch_size; x++)
-		{
-			if (y > 0) make_edge(x, y, x, y - 1);
-			if (y < patch_size - 1) make_edge(x, y, x, y + 1);
-			if (x > 0) make_edge(x, y, x - 1, y);
-			if (x < patch_size - 1) make_edge(x, y, x + 1, y);
-		}
-	}
+
 	node_t &source = get_source_node();
 	node_t &sink = get_sink_node();
 
@@ -36,6 +27,10 @@ graphcut_t::graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_
 				make_edge(x, y, source);
 			else if (constraint == CONSTRAINT_COLOR_SINK)
 				make_edge(x, y, sink);
+			if (y > 0) make_edge(x, y, x, y - 1);
+			if (y < patch_size - 1) make_edge(x, y, x, y + 1);
+			if (x > 0) make_edge(x, y, x - 1, y);
+			if (x < patch_size - 1) make_edge(x, y, x + 1, y);
 		}
 	}
 }
@@ -140,6 +135,10 @@ void graphcut_t::compute_cut_mask(image_t mask_image, patch_t mask_patch, algori
 // this method must guarantee edge weight is symmetric
 void graphcut_t::make_edge(int x0, int y0, int x1, int y1)
 {
+	color_t constraint0 = constraints.get_pixel(x0, y0);
+	color_t constraint1 = constraints.get_pixel(x1, y1);
+	if (constraint0 == constraint1 && constraint0 != CONSTRAINT_COLOR_FREE) return;
+
 	node_t &node0 = get_pixel_node(x0, y0);
 	node_t &node1 = get_pixel_node(x1, y1);
 	if (&node0 > &node1) return;

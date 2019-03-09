@@ -12,10 +12,12 @@ struct color_t
 	color_t(int r, int g, int b)
 		: r((unsigned char)r), g((unsigned char)g), b((unsigned char)b) { }
 
-	bool operator == (const color_t &other)
+	inline bool operator == (const color_t &other)
 	{
 		return r == other.r && g == other.g && b == other.b;
 	}
+
+	inline bool operator != (const color_t &other) { return !(*this == other); }
 };
 
 struct image_t
