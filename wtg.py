@@ -1,6 +1,7 @@
 import os
 import sys
 import math
+import time
 from subprocess import Popen
 from PIL import Image, ImageFilter
 
@@ -55,7 +56,7 @@ def main():
 	output_path = fn + "_wangtiles_cornors" + ext
 	output_cornors.save(output_path)
 
-	output_path = fn + "_wangtiles_constraints" + ext
+	output_path = fn + "_wangtiles_graphcut_constraints" + ext
 	graphcut_constraints.save(output_path)
 
 	os.remove(tmpinput)
@@ -63,5 +64,10 @@ def main():
 	os.remove(tmpoutput_cornors)
 	os.remove(tmpoutput_constraints)
 
+
+
 if __name__ == "__main__":
+	start_time = time.time()
 	main()
+	elapsed_time = time.time() - start_time
+	print "execution finished in %f seconds" % elapsed_time

@@ -199,6 +199,7 @@ void wangtiles_t::generate_graphcut_constraints()
 	for (int i = 0; i < tile_size * tile_size; i++)
 		graphcut_constraints.pixels[i] = CONSTRAINT_COLOR_FREE;
 
+	// must-have constraints
 	for (int p = 0; p < tile_size; p++)
 	{
 		graphcut_constraints.set_pixel(p, 0, CONSTRAINT_COLOR_SOURCE);
@@ -215,4 +216,10 @@ void wangtiles_t::generate_graphcut_constraints()
 		graphcut_constraints.set_pixel(half_tile_size - 1, p, CONSTRAINT_COLOR_SINK);
 		graphcut_constraints.set_pixel(half_tile_size, p, CONSTRAINT_COLOR_SINK);
 	}
+
+	// additional constraints
+	int padding = tile_size / 7;
+	for (int y = padding; y < tile_size - padding; y++)
+		for (int x = padding; x < tile_size - padding; x++)
+			graphcut_constraints.set_pixel(x, y, CONSTRAINT_COLOR_SINK);
 }
