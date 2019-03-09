@@ -103,6 +103,6 @@ inline color_t get_color(vector3f_t v)
 	return color_t(int(v.x * 255.0f), int(v.y * 255.0f), int(v.z * 255.0f));
 }
 
-#define CONSTRAINT_COLOR_SOURCE		color_t(1, 2, 3)
-#define CONSTRAINT_COLOR_SINK		color_t(3, 2, 1)
-#define CONSTRAINT_COLOR_FREE		color_t(4, 5, 6)
+#define CONSTRAINT_COLOR_SOURCE		color_t(255, 0, 0)
+#define CONSTRAINT_COLOR_SINK		color_t(0, 255, 0)
+#define CONSTRAINT_COLOR_FREE		color_t(100, 100, 100)
