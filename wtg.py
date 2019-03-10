@@ -24,11 +24,16 @@ def main():
 	f.write(data)
 	f.close()
 
+	command = ["exe_path(place holder)", str(resolution), tmpinput, tmpoutput, tmpoutput_cornors, tmpoutput_constraints]
 	if len(sys.argv) > 2 and sys.argv[2] == '--debug':
 		core_executable = core_executable_debug
+		if len(sys.argv) > 3:
+			debug_tileindex = int(sys.argv[3])
+			command.append(str(debug_tileindex))
 	else:
 		core_executable = core_executable_release
-	p = Popen([core_executable, str(resolution), tmpinput, tmpoutput, tmpoutput_cornors, tmpoutput_constraints])
+	command[0] = core_executable
+	p = Popen(command)
 	returncode = p.wait()
 	if returncode != 0:
 		raise Exception("wtgcore returns error")

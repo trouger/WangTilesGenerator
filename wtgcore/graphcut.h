@@ -24,6 +24,9 @@ struct node_t
 	// temp for bfs
 	node_t *prev;
 	edge_t *prev_edge;
+#ifdef _DEBUG
+	int coord_x, coord_y;
+#endif
 
 	node_t() :prev(NULL), prev_edge(NULL) { }
 };

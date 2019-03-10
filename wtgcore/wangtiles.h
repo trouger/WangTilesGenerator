@@ -9,6 +9,8 @@ public:
 	wangtiles_t(image_t source, int num_colors);
 	~wangtiles_t();
 
+	void set_debug_tileindex(int tileindex) { debug_tileindex = tileindex; }
+
 	void pick_colored_patches();
 	void generate_packed_cornors();
 	void generate_wang_tiles();
@@ -32,5 +34,7 @@ private:
 	image_t packed_cornors_mask;
 	image_t packed_wang_tiles;
 	image_t graphcut_constraints;
+
+	int debug_tileindex;
 };
 

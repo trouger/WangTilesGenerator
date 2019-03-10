@@ -17,6 +17,10 @@ graphcut_t::graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_
 
 	node_t &source = get_source_node();
 	node_t &sink = get_sink_node();
+#ifdef _DEBUG
+	source.coord_x = source.coord_y = -2;
+	sink.coord_x = sink.coord_y = -1;
+#endif
 
 	for (int y = 0; y < patch_size; y++)
 	{
@@ -31,6 +35,11 @@ graphcut_t::graphcut_t(image_t image_a, patch_t patch_a, image_t image_b, patch_
 			if (y < patch_size - 1) make_edge(x, y, x, y + 1);
 			if (x > 0) make_edge(x, y, x - 1, y);
 			if (x < patch_size - 1) make_edge(x, y, x + 1, y);
+#ifdef _DEBUG
+			node_t &node = get_pixel_node(x, y);
+			node.coord_x = x;
+			node.coord_y = y;
+#endif
 		}
 	}
 }

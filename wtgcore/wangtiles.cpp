@@ -37,7 +37,7 @@ void generate_inv_packing_table(int inv_packing_table[], int num_colors)
 }
 
 wangtiles_t::wangtiles_t(image_t source, int num_colors)
-	:source_image(source), num_colors(num_colors)
+	:source_image(source), num_colors(num_colors), debug_tileindex(-1)
 {
 	if (num_colors < 2 || num_colors > 4)
 	{
@@ -269,9 +269,10 @@ void wangtiles_t::graphcut_textures(image_t image_a, image_t image_b, image_t co
 	{
 		for (int col = 0; col < num_tiles; col++)
 		{
+			int tileindex = row * num_tiles + col;
+			if (debug_tileindex != -1 && tileindex != debug_tileindex) continue;
 			jobsystem.addjob([=, &mutex, &statistics]()
 			{
-				int tileindex = row * num_tiles + col;
 				mutex.lock();
 				std::cout << "calculating graphcut for tile " << tileindex << " of " << num_tiles * num_tiles << "\n";
 				mutex.unlock();
