@@ -127,46 +127,81 @@ void wangtiles_t::generate_packed_cornors()
 	}
 }
 
+image_t downsample(const image_t &input)
+{
+	image_t output;
+	output.init(input.resolution >> 1);
+	for (int y = 0; y < output.resolution; y++)
+	{
+		for (int x = 0; x < output.resolution; x++)
+		{
+			vector3f_t v = get_vector3f(input.get_pixel(x << 1, y << 1));
+			v = v + get_vector3f(input.get_pixel((x << 1) + 1, y << 1));
+			v = v + get_vector3f(input.get_pixel(x << 1, (y << 1) + 1));
+			v = v + get_vector3f(input.get_pixel((x << 1) + 1, (y << 1) + 1));
+			color_t c = get_color(v * 0.25f);
+			output.set_pixel(x, y, c);
+		}
+	}
+	return output;
+}
+
+image_t upsample(const image_t &input)
+{
+	image_t output;
+	output.init(input.resolution << 1);
+	for (int y = 0; y < input.resolution; y++)
+	{
+		for (int x = 0; x < input.resolution; x++)
+		{
+			color_t c = input.get_pixel(x, y);
+			output.set_pixel(x << 1, y << 1, c);
+			output.set_pixel((x << 1) + 1, y << 1, c);
+			output.set_pixel(x << 1, (y << 1) + 1, c);
+			output.set_pixel((x << 1) + 1, (y << 1) + 1, c);
+		}
+	}
+	return output;
+}
+
 void wangtiles_t::generate_wang_tiles()
 {
 	const int resolution = source_image.resolution;
-	const int num_tiles = num_colors * num_colors;
-	const int tile_size = resolution / num_tiles;
-	
-	packed_cornors_mask.clear();
-	packed_cornors_mask.init(resolution);
+	int visual_scale = 128; // apply computer vision processes under a certain scale
 
-	generate_graphcut_constraints();
+	int num_tiles = num_colors * num_colors;
+	int tile_size = resolution / num_tiles;
+	visual_scale = std::min(visual_scale, tile_size);
 
-	jobsystem_t jobsystem;
-	std::mutex mutex;
-	std::vector<algorithm_statistics_t> statistics(num_tiles * num_tiles);
-	for (int row = 0; row < num_tiles; row++)
+	// downsample images into specific visual scale
+	int downsample_iterations = 0;
+	std::vector<image_t> source_mips, cornors_mips;
+	source_mips.push_back(source_image);
+	cornors_mips.push_back(packed_cornors);
+	while ((tile_size >> downsample_iterations) > visual_scale)
 	{
-		for (int col = 0; col < num_tiles; col++)
-		{
-			jobsystem.addjob([=, &mutex, &statistics]()
-			{
-				int tileindex = row * num_tiles + col;
-				mutex.lock();
-				std::cout << "calculating graphcut for tile " << tileindex << " of " << num_tiles * num_tiles << "\n";
-				mutex.unlock();
-				patch_t patch;
-				patch.size = tile_size;
-				patch.x = col * tile_size;
-				patch.y = row * tile_size;
-				graphcut_t graphcut(packed_cornors, patch, source_image, patch, graphcut_constraints);
-				graphcut.compute_cut_mask(packed_cornors_mask, patch, statistics[tileindex]); 
-			});
-		}
+		source_mips.push_back(downsample(source_mips.back()));
+		cornors_mips.push_back(downsample(cornors_mips.back()));
+		downsample_iterations++;
 	}
-	jobsystem.startjobs();
-	jobsystem.wait();
-
-	for (int i = 0; i < statistics.size(); i++)
+	if (source_mips.back().resolution != visual_scale * num_tiles)
 	{
-		auto stat = statistics[i];
-		std::cout << "found max-flow for tile " << i << " after " << stat.iteration_count << " iterations: " << stat.max_flow << std::endl;
+		std::cerr << "invalid state\n";
+		exit(-1);
+	}
+
+	// perform graphcut in visual scale
+	graphcut_constraints.clear();
+	graphcut_constraints.init(visual_scale);
+	fill_graphcut_constraints(visual_scale, graphcut_constraints);
+	graphcut_textures(cornors_mips.back(), source_mips.back(), graphcut_constraints, packed_cornors_mask);
+
+	for (int i = 1; i <= downsample_iterations; i++)
+	{
+		source_mips[i].clear();
+		cornors_mips[i].clear();
+
+		packed_cornors_mask = upsample(packed_cornors_mask);
 	}
 
 	// blend the two layers
@@ -186,15 +221,9 @@ void wangtiles_t::generate_wang_tiles()
 	}
 }
 
-void wangtiles_t::generate_graphcut_constraints()
+void wangtiles_t::fill_graphcut_constraints(const int tile_size, image_t &graphcut_constraints)
 {
-	const int resolution = source_image.resolution;
-	const int num_tiles = num_colors * num_colors;
-	const int tile_size = resolution / num_tiles;
 	const int half_tile_size = tile_size >> 1;
-
-	graphcut_constraints.clear();
-	graphcut_constraints.init(tile_size);
 
 	for (int i = 0; i < tile_size * tile_size; i++)
 		graphcut_constraints.pixels[i] = CONSTRAINT_COLOR_FREE;
@@ -222,4 +251,45 @@ void wangtiles_t::generate_graphcut_constraints()
 	for (int y = padding; y < tile_size - padding; y++)
 		for (int x = padding; x < tile_size - padding; x++)
 			graphcut_constraints.set_pixel(x, y, CONSTRAINT_COLOR_SINK);
+}
+
+void wangtiles_t::graphcut_textures(image_t image_a, image_t image_b, image_t constraints, image_t &out_mask)
+{
+	const int resolution = image_a.resolution;
+	const int num_tiles = num_colors * num_colors;
+	const int tile_size = resolution / num_tiles;
+
+	out_mask.clear();
+	out_mask.init(resolution);
+
+	jobsystem_t jobsystem;
+	std::mutex mutex;
+	std::vector<algorithm_statistics_t> statistics(num_tiles * num_tiles);
+	for (int row = 0; row < num_tiles; row++)
+	{
+		for (int col = 0; col < num_tiles; col++)
+		{
+			jobsystem.addjob([=, &mutex, &statistics]()
+			{
+				int tileindex = row * num_tiles + col;
+				mutex.lock();
+				std::cout << "calculating graphcut for tile " << tileindex << " of " << num_tiles * num_tiles << "\n";
+				mutex.unlock();
+				patch_t patch;
+				patch.size = tile_size;
+				patch.x = col * tile_size;
+				patch.y = row * tile_size;
+				graphcut_t graphcut(image_a, patch, image_b, patch, constraints);
+				graphcut.compute_cut_mask(out_mask, patch, statistics[tileindex]);
+			});
+		}
+	}
+	jobsystem.startjobs();
+	jobsystem.wait();
+
+	for (int i = 0; i < statistics.size(); i++)
+	{
+		auto stat = statistics[i];
+		std::cout << "found max-flow for tile " << i << " after " << stat.iteration_count << " iterations: " << stat.max_flow << std::endl;
+	}
 }

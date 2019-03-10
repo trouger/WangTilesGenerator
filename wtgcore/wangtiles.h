@@ -19,7 +19,8 @@ public:
 	image_t get_graphcut_constraints() { return graphcut_constraints; }
 
 private:
-	void generate_graphcut_constraints();
+	void fill_graphcut_constraints(const int tile_size, image_t &constraints);
+	void graphcut_textures(image_t image_a, image_t image_b, image_t constraints, image_t &out_mask);
 
 private:
 	image_t source_image;

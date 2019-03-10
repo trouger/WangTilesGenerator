@@ -40,7 +40,7 @@ struct image_t
 		pixels = NULL;
 	}
 
-	color_t get_pixel(int x, int y)
+	color_t get_pixel(int x, int y) const
 	{
 		return pixels[y * resolution + x];
 	}
