@@ -76,28 +76,29 @@ resultset_t processimage(image_t image, int debug_tileindex)
 	return result;
 }
 
-int main(int argc, const char *argv[])
+int print_usage_on_error()
 {
-	const char *usage_msg = "Usage: wtgcore <resolution> <input-path> <output-path> <output-cornors-path> <output-constraints-path> <debug-tile-index>\n";
-	if (argc < 6)
-	{
-		std::cout << usage_msg;
-		return -1;
-	}
-	//system("pause");
-	int resolution = std::atoi(argv[1]);
+	const char *usage_msg = "Usage:  wtgcore --tiles <resolution> <input-path> <output-path> <output-cornors-path> <output-constraints-path> <debug-tile-index>\n"
+							"     |  wtgcore --index <resolution> <output-path>\n";
+	std::cerr << usage_msg;
+	return -1;
+}
+
+int generate_tiles_entry(int argc, const char *argv[])
+{
+	if (argc < 7) return print_usage_on_error();
+	int resolution = std::atoi(argv[2]);
 	if (resolution <= 0 || (resolution & (resolution - 1)) != 0)
 	{
 		std::cerr << "resolution is invalid, must be a POT\n";
-		std::cout << usage_msg;
-		return -1;
+		return print_usage_on_error();
 	}
-	const char *inputpath = argv[2];
-	const char *outputpath = argv[3];
-	const char *outputpath_cornors = argv[4];
-	const char *outputpath_constraints = argv[5];
+	const char *inputpath = argv[3];
+	const char *outputpath = argv[4];
+	const char *outputpath_cornors = argv[5];
+	const char *outputpath_constraints = argv[6];
 	int debug_tileindex = -1;
-	if (argc > 6) debug_tileindex = std::atoi(argv[6]);
+	if (argc > 7) debug_tileindex = std::atoi(argv[7]);
 
 	image_t input;
 	input.resolution = resolution;
@@ -123,6 +124,25 @@ int main(int argc, const char *argv[])
 		return -1;
 	}
 	return 0;
+}
+
+int generate_indexmap_entry(int argc, const char *argv[])
+{
+	if (argc != 4) return print_usage_on_error();
+	return 0;
+}
+
+int main(int argc, const char *argv[])
+{
+	
+	bool generate_indexmap = argc > 1 && strcmp(argv[1], "--index") == 0;
+	bool generate_tiles = argc > 1 && strcmp(argv[1], "--tiles") == 0;
+	if (generate_indexmap)
+		return generate_indexmap_entry(argc, argv);
+	else if (generate_tiles)
+		return generate_tiles_entry(argc, argv);
+	else
+		return print_usage_on_error();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

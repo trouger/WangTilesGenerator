@@ -8,6 +8,9 @@ from PIL import Image, ImageFilter
 core_executable_release = os.path.join(os.path.dirname(__file__), 'wtgcore/x64/Release/wtgcore.exe')
 core_executable_debug = os.path.join(os.path.dirname(__file__), 'wtgcore/x64/Debug/wtgcore.exe')
 
+"""
+Usage: python wtg.py input_image [--debug [<debug-tile-index>]]
+"""
 def main():
 	input_path = sys.argv[1]
 	input = Image.open(input_path)
@@ -24,7 +27,7 @@ def main():
 	f.write(data)
 	f.close()
 
-	command = ["exe_path(place holder)", str(resolution), tmpinput, tmpoutput, tmpoutput_cornors, tmpoutput_constraints]
+	command = ["exe_path(place holder)", "--tiles", str(resolution), tmpinput, tmpoutput, tmpoutput_cornors, tmpoutput_constraints]
 	if len(sys.argv) > 2 and sys.argv[2] == '--debug':
 		core_executable = core_executable_debug
 		if len(sys.argv) > 3:
@@ -47,6 +50,7 @@ def main():
 	output_cornors = f.read()
 	f.close()
 	output_cornors = Image.frombytes("RGB", (resolution, resolution), output_cornors)
+	output_cornors.putalpha(output_cornors.getchannel("R"))
 
 	f = open(tmpoutput_constraints, "rb")
 	graphcut_constraints = f.read()
