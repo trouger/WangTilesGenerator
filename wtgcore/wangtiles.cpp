@@ -221,6 +221,40 @@ void wangtiles_t::generate_wang_tiles()
 	}
 }
 
+image_t wangtiles_t::generate_indexmap(int resolution)
+{
+	image_t indexmap;
+	indexmap.init(resolution);
+
+	image_t cornormap;
+	cornormap.init(resolution + 1);
+	for (int y = 0; y < resolution; y++)
+	{
+		for (int x = 0; x < resolution; x++)
+		{
+			int colorindex = (int)((rand() / (float)(RAND_MAX + 1)) * num_colors);
+			cornormap.set_pixel(x, y, color_t(colorindex, 0, 0));
+		}
+		cornormap.set_pixel(resolution, y, cornormap.get_pixel(0, y));
+	}
+	for (int x = 0; x <= resolution; x++)
+		cornormap.set_pixel(x, resolution, cornormap.get_pixel(x, 0));
+
+	for (int y = 0; y < resolution; y++)
+	{
+		for (int x = 0; x < resolution; x++)
+		{
+			int cne = cornormap.get_pixel(x + 1, y + 1).r;
+			int cse = cornormap.get_pixel(x + 1, y).r;
+			int csw = cornormap.get_pixel(x, y).r;
+			int cnw = cornormap.get_pixel(x, y + 1).r;
+			int tileindex = inv_packing_table[(cne << 6) | (cse << 4) | (csw << 2) | cnw];
+			indexmap.set_pixel(x, y, color_t(tileindex, tileindex, tileindex));
+		}
+	}
+	return indexmap;
+}
+
 void wangtiles_t::fill_graphcut_constraints(const int tile_size, image_t &graphcut_constraints)
 {
 	const int half_tile_size = tile_size >> 1;

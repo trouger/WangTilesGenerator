@@ -129,12 +129,26 @@ int generate_tiles_entry(int argc, const char *argv[])
 int generate_indexmap_entry(int argc, const char *argv[])
 {
 	if (argc != 4) return print_usage_on_error();
+	int resolution = std::atoi(argv[2]);
+	if (resolution <= 0)
+	{
+		std::cerr << "resolution is invalid\n";
+		return print_usage_on_error();
+	}
+	const char *outputpath = argv[3];
+
+	wangtiles_t wangtiles(image_t(), 2); // create a wangtiles object with a dummy source image
+	image_t indexmap = wangtiles.generate_indexmap(resolution);
+	if (!writefile(outputpath, indexmap.pixels, resolution))
+	{
+		std::cerr << "write output file failed\n";
+		return -1;
+	}
 	return 0;
 }
 
 int main(int argc, const char *argv[])
 {
-	
 	bool generate_indexmap = argc > 1 && strcmp(argv[1], "--index") == 0;
 	bool generate_tiles = argc > 1 && strcmp(argv[1], "--tiles") == 0;
 	if (generate_indexmap)
