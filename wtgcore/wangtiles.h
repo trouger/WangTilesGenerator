@@ -12,11 +12,11 @@ public:
 	void set_debug_tileindex(int tileindex) { debug_tileindex = tileindex; }
 
 	void pick_colored_patches();
-	void generate_packed_cornors();
+	void generate_packed_corners();
 	void generate_wang_tiles();
 
-	image_t get_packed_cornors() { return packed_cornors; }
-	mask_t get_packed_cornors_mask() { return packed_cornors_mask; }
+	image_t get_packed_corners() { return packed_corners; }
+	mask_t get_packed_corners_mask() { return packed_corners_mask; }
 	image_t get_packed_wang_tiles() { return packed_wang_tiles; }
 	image_t get_graphcut_constraints() { return graphcut_constraints; }
 
@@ -32,8 +32,8 @@ private:
 	int inv_packing_table[256];
 
 	std::vector<patch_t> colored_patches;
-	image_t packed_cornors;
-	mask_t packed_cornors_mask;
+	image_t packed_corners;
+	mask_t packed_corners_mask;
 	image_t packed_wang_tiles;
 	image_t graphcut_constraints;
 

@@ -81,8 +81,8 @@ bool writefile(const char *path, const color_t *data, const unsigned char *alpha
 
 struct resultset_t
 {
-	image_t packed_cornors;
-	mask_t packed_cornors_mask;
+	image_t packed_corners;
+	mask_t packed_corners_mask;
 	image_t packed_wang_tiles;
 	image_t graphcut_constraints;
 };
@@ -94,11 +94,11 @@ resultset_t processimage(image_t image, int debug_tileindex)
 	wangtiles_t wangtiles(image, 2);
 	wangtiles.set_debug_tileindex(debug_tileindex);
 	wangtiles.pick_colored_patches();
-	wangtiles.generate_packed_cornors();
+	wangtiles.generate_packed_corners();
 	wangtiles.generate_wang_tiles();
 
-	result.packed_cornors = wangtiles.get_packed_cornors();
-	result.packed_cornors_mask = wangtiles.get_packed_cornors_mask();
+	result.packed_corners = wangtiles.get_packed_corners();
+	result.packed_corners_mask = wangtiles.get_packed_corners_mask();
 	result.packed_wang_tiles = wangtiles.get_packed_wang_tiles();
 	result.graphcut_constraints = wangtiles.get_graphcut_constraints();
 	return result;
@@ -106,7 +106,7 @@ resultset_t processimage(image_t image, int debug_tileindex)
 
 int print_usage_on_error()
 {
-	const char *usage_msg = "Usage:  wtgcore --tiles <resolution> <input-path> <output-path> <output-cornors-path> <output-constraints-path> <debug-tile-index>\n"
+	const char *usage_msg = "Usage:  wtgcore --tiles <resolution> <input-path> <output-path> <output-corners-path> <output-constraints-path> <debug-tile-index>\n"
 							"     |  wtgcore --index <resolution> <output-path>\n";
 	std::cerr << usage_msg;
 	return -1;
@@ -123,7 +123,7 @@ int generate_tiles_entry(int argc, const char *argv[])
 	}
 	const char *inputpath = argv[3];
 	const char *outputpath = argv[4];
-	const char *outputpath_cornors = argv[5];
+	const char *outputpath_corners = argv[5];
 	const char *outputpath_constraints = argv[6];
 	int debug_tileindex = -1;
 	if (argc > 7) debug_tileindex = std::atoi(argv[7]);
@@ -141,9 +141,9 @@ int generate_tiles_entry(int argc, const char *argv[])
 		std::cerr << "write output file failed\n";
 		return -1;
 	}
-	if (!writefile(outputpath_cornors, result.packed_cornors.pixels, result.packed_cornors_mask.pixels, resolution))
+	if (!writefile(outputpath_corners, result.packed_corners.pixels, result.packed_corners_mask.pixels, resolution))
 	{
-		std::cerr << "write output cornors file failed\n";
+		std::cerr << "write output corners file failed\n";
 		return -1;
 	}
 	if (!writefile(outputpath_constraints, result.graphcut_constraints.pixels, result.graphcut_constraints.resolution))

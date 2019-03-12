@@ -21,13 +21,13 @@ def main():
 	data = input.tobytes()
 	tmpinput = os.path.abspath(".\\input.img")
 	tmpoutput = os.path.abspath(".\\output.img")
-	tmpoutput_cornors = os.path.abspath(".\\output_cornors.img")
+	tmpoutput_corners = os.path.abspath(".\\output_corners.img")
 	tmpoutput_constraints = os.path.abspath(".\\graphcut_constraints.img")
 	f = open(tmpinput, "wb")
 	f.write(data)
 	f.close()
 
-	command = ["exe_path(place holder)", "--tiles", str(resolution), tmpinput, tmpoutput, tmpoutput_cornors, tmpoutput_constraints]
+	command = ["exe_path(place holder)", "--tiles", str(resolution), tmpinput, tmpoutput, tmpoutput_corners, tmpoutput_constraints]
 	if len(sys.argv) > 2 and sys.argv[2] == '--debug':
 		core_executable = core_executable_debug
 		if len(sys.argv) > 3:
@@ -46,10 +46,10 @@ def main():
 	f.close()
 	output = Image.frombytes("RGB", (resolution, resolution), output)
 
-	f = open(tmpoutput_cornors, "rb")
-	output_cornors = f.read()
+	f = open(tmpoutput_corners, "rb")
+	output_corners = f.read()
 	f.close()
-	output_cornors = Image.frombytes("RGBA", (resolution, resolution), output_cornors)
+	output_corners = Image.frombytes("RGBA", (resolution, resolution), output_corners)
 
 	f = open(tmpoutput_constraints, "rb")
 	graphcut_constraints = f.read()
@@ -61,15 +61,15 @@ def main():
 	output_path = fn + "_wangtiles" + ext
 	output.save(output_path)
 
-	output_path = fn + "_wangtiles_cornors" + ext
-	output_cornors.save(output_path)
+	output_path = fn + "_wangtiles_corners" + ext
+	output_corners.save(output_path)
 
 	output_path = fn + "_wangtiles_graphcut_constraints" + ext
 	graphcut_constraints.save(output_path)
 
 	os.remove(tmpinput)
 	os.remove(tmpoutput)
-	os.remove(tmpoutput_cornors)
+	os.remove(tmpoutput_corners)
 	os.remove(tmpoutput_constraints)
 
 

@@ -6,8 +6,8 @@
 #include "jobsystem.h"
 
 // This is from Figure 9 of the paper "An Alternative for Wang Tiles: Colored Edges versus Colored Corners".
-// Four cornor colors are encoded as 0, 1, 2, 3.
-// A tile is encoded as a base-4 number with 4 digits, which are the colors of the four cornors.
+// Four corner colors are encoded as 0, 1, 2, 3.
+// A tile is encoded as a base-4 number with 4 digits, which are the colors of the four corners.
 // The 4-digit number is C(NE)C(SE)C(SW)C(NW).
 int reference_packing_table[] = {
 	0, 16, 68, 1,
@@ -86,22 +86,22 @@ void wangtiles_t::pick_colored_patches()
 	}
 }
 
-void wangtiles_t::generate_packed_cornors()
+void wangtiles_t::generate_packed_corners()
 {
 	const int num_tiles = num_colors * num_colors;
 	const int patch_size = colored_patches[0].size;
 	const int tile_size = patch_size;
 	const int half_tile_size = tile_size >> 1;
 	const int resolution = source_image.resolution;
-	packed_cornors.clear();
-	packed_cornors.init(resolution);
-	color_t *pixels = packed_cornors.pixels;
+	packed_corners.clear();
+	packed_corners.init(resolution);
+	color_t *pixels = packed_corners.pixels;
 	for (int cne = 0; cne < num_colors; cne++) {
 		for (int cse = 0; cse < num_colors; cse++) {
 			for (int csw = 0; csw < num_colors; csw++) {
 				for (int cnw = 0; cnw < num_colors; cnw++)
 				{
-					int cornors[4] = { csw, cse, cnw, cne };
+					int corners[4] = { csw, cse, cnw, cne };
 					int tileindex = inv_packing_table[(cne << 6) | (cse << 4) | (csw << 2) | cnw];
 					int row = tileindex / num_tiles;
 					int col = tileindex - row * num_tiles;
@@ -113,7 +113,7 @@ void wangtiles_t::generate_packed_cornors()
 						{
 							int y_north_half = y >= half_tile_size ? 1 : 0;
 							int x_east_half = x >= half_tile_size ? 1 : 0;
-							int color = cornors[(y_north_half << 1) | x_east_half];
+							int color = corners[(y_north_half << 1) | x_east_half];
 							const patch_t &source_patch = colored_patches[color];
 							int sample_y = y + (1 - y_north_half * 2) * half_tile_size + source_patch.y;
 							int sample_x = x + (1 - x_east_half * 2) * half_tile_size + source_patch.x;
@@ -176,13 +176,13 @@ void wangtiles_t::generate_wang_tiles()
 
 	// downsample images into specific visual scale
 	int downsample_iterations = 0;
-	std::vector<image_t> source_mips, cornors_mips;
+	std::vector<image_t> source_mips, corners_mips;
 	source_mips.push_back(source_image);
-	cornors_mips.push_back(packed_cornors);
+	corners_mips.push_back(packed_corners);
 	while ((tile_size >> downsample_iterations) > visual_scale)
 	{
 		source_mips.push_back(downsample(source_mips.back()));
-		cornors_mips.push_back(downsample(cornors_mips.back()));
+		corners_mips.push_back(downsample(corners_mips.back()));
 		downsample_iterations++;
 	}
 	if (source_mips.back().resolution != visual_scale * num_tiles)
@@ -195,14 +195,14 @@ void wangtiles_t::generate_wang_tiles()
 	graphcut_constraints.clear();
 	graphcut_constraints.init(visual_scale);
 	fill_graphcut_constraints(visual_scale, graphcut_constraints);
-	graphcut_textures(cornors_mips.back(), source_mips.back(), graphcut_constraints, packed_cornors_mask);
+	graphcut_textures(corners_mips.back(), source_mips.back(), graphcut_constraints, packed_corners_mask);
 
 	for (int i = 1; i <= downsample_iterations; i++)
 	{
 		source_mips[i].clear();
-		cornors_mips[i].clear();
+		corners_mips[i].clear();
 
-		packed_cornors_mask = upsample(packed_cornors_mask);
+		packed_corners_mask = upsample(packed_corners_mask);
 	}
 
 	// blend the two layers
@@ -214,8 +214,8 @@ void wangtiles_t::generate_wang_tiles()
 		for (int x = 0; x < resolution; x++)
 		{
 			vector3f_t color0 = get_vector3f(source_image.get_pixel(x, y));
-			vector3f_t color1 = get_vector3f(packed_cornors.get_pixel(x, y));
-			float mask = packed_cornors_mask.get_pixel(x, y) / 255.0f;
+			vector3f_t color1 = get_vector3f(packed_corners.get_pixel(x, y));
+			float mask = packed_corners_mask.get_pixel(x, y) / 255.0f;
 			vector3f_t color = color0 * (1.0f - mask) + color1 * mask;
 			packed_wang_tiles.set_pixel(x, y, get_color(color));
 		}
@@ -227,28 +227,28 @@ image_t wangtiles_t::generate_indexmap(int resolution)
 	image_t indexmap;
 	indexmap.init(resolution);
 
-	image_t cornormap;
-	cornormap.init(resolution + 1);
+	image_t cornermap;
+	cornermap.init(resolution + 1);
 	for (int y = 0; y < resolution; y++)
 	{
 		for (int x = 0; x < resolution; x++)
 		{
 			int colorindex = (int)((rand() / (float)(RAND_MAX + 1)) * num_colors);
-			cornormap.set_pixel(x, y, color_t(colorindex, 0, 0));
+			cornermap.set_pixel(x, y, color_t(colorindex, 0, 0));
 		}
-		cornormap.set_pixel(resolution, y, cornormap.get_pixel(0, y));
+		cornermap.set_pixel(resolution, y, cornermap.get_pixel(0, y));
 	}
 	for (int x = 0; x <= resolution; x++)
-		cornormap.set_pixel(x, resolution, cornormap.get_pixel(x, 0));
+		cornermap.set_pixel(x, resolution, cornermap.get_pixel(x, 0));
 
 	for (int y = 0; y < resolution; y++)
 	{
 		for (int x = 0; x < resolution; x++)
 		{
-			int cne = cornormap.get_pixel(x + 1, y + 1).r;
-			int cse = cornormap.get_pixel(x + 1, y).r;
-			int csw = cornormap.get_pixel(x, y).r;
-			int cnw = cornormap.get_pixel(x, y + 1).r;
+			int cne = cornermap.get_pixel(x + 1, y + 1).r;
+			int cse = cornermap.get_pixel(x + 1, y).r;
+			int csw = cornermap.get_pixel(x, y).r;
+			int cnw = cornermap.get_pixel(x, y + 1).r;
 			int tileindex = inv_packing_table[(cne << 6) | (cse << 4) | (csw << 2) | cnw];
 			indexmap.set_pixel(x, y, color_t(tileindex, tileindex, tileindex));
 		}
