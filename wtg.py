@@ -49,8 +49,7 @@ def main():
 	f = open(tmpoutput_cornors, "rb")
 	output_cornors = f.read()
 	f.close()
-	output_cornors = Image.frombytes("RGB", (resolution, resolution), output_cornors)
-	output_cornors.putalpha(output_cornors.getchannel("R"))
+	output_cornors = Image.frombytes("RGBA", (resolution, resolution), output_cornors)
 
 	f = open(tmpoutput_constraints, "rb")
 	graphcut_constraints = f.read()

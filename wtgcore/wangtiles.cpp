@@ -146,15 +146,16 @@ image_t downsample(const image_t &input)
 	return output;
 }
 
-image_t upsample(const image_t &input)
+template <typename _img_t>
+_img_t upsample(const _img_t &input)
 {
-	image_t output;
+	_img_t output;
 	output.init(input.resolution << 1);
 	for (int y = 0; y < input.resolution; y++)
 	{
 		for (int x = 0; x < input.resolution; x++)
 		{
-			color_t c = input.get_pixel(x, y);
+			typename _img_t::_pixel_t c = input.get_pixel(x, y);
 			output.set_pixel(x << 1, y << 1, c);
 			output.set_pixel((x << 1) + 1, y << 1, c);
 			output.set_pixel(x << 1, (y << 1) + 1, c);
@@ -214,7 +215,7 @@ void wangtiles_t::generate_wang_tiles()
 		{
 			vector3f_t color0 = get_vector3f(source_image.get_pixel(x, y));
 			vector3f_t color1 = get_vector3f(packed_cornors.get_pixel(x, y));
-			float mask = packed_cornors_mask.get_pixel(x, y).r / 255.0f;
+			float mask = packed_cornors_mask.get_pixel(x, y) / 255.0f;
 			vector3f_t color = color0 * (1.0f - mask) + color1 * mask;
 			packed_wang_tiles.set_pixel(x, y, get_color(color));
 		}
@@ -287,7 +288,7 @@ void wangtiles_t::fill_graphcut_constraints(const int tile_size, image_t &graphc
 			graphcut_constraints.set_pixel(x, y, CONSTRAINT_COLOR_SINK);
 }
 
-void wangtiles_t::graphcut_textures(image_t image_a, image_t image_b, image_t constraints, image_t &out_mask)
+void wangtiles_t::graphcut_textures(image_t image_a, image_t image_b, image_t constraints, mask_t &out_mask)
 {
 	const int resolution = image_a.resolution;
 	const int num_tiles = num_colors * num_colors;

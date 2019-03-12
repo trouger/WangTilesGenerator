@@ -20,17 +20,19 @@ struct color_t
 	inline bool operator != (const color_t &other) { return !(*this == other); }
 };
 
-struct image_t
+template <typename _p_t>
+struct generic_image_t
 {
-	color_t *pixels;
+	typedef _p_t _pixel_t;
+	_pixel_t *pixels;
 	int resolution;
 
-	image_t() :pixels(NULL), resolution(0) {}
+	generic_image_t() :pixels(NULL), resolution(0) {}
 	
 	void init(int resolution)
 	{
 		this->resolution = resolution;
-		pixels = new color_t[resolution * resolution];
+		pixels = new _pixel_t[resolution * resolution];
 	}
 
 	void clear()
@@ -40,16 +42,19 @@ struct image_t
 		pixels = NULL;
 	}
 
-	color_t get_pixel(int x, int y) const
+	_pixel_t get_pixel(int x, int y) const
 	{
 		return pixels[y * resolution + x];
 	}
 
-	void set_pixel(int x, int y, color_t color)
+	void set_pixel(int x, int y, _pixel_t color)
 	{
 		pixels[y * resolution + x] = color;
 	}
 };
+
+typedef generic_image_t<color_t> image_t;
+typedef generic_image_t<unsigned char> mask_t;
 
 struct patch_t
 {

@@ -83,7 +83,7 @@ void graphcut_t::bfs(bool stop_on_sink)
 }
 
 // get a mask which should be applied to patch a
-void graphcut_t::compute_cut_mask(image_t mask_image, patch_t mask_patch, algorithm_statistics_t &statistics)
+void graphcut_t::compute_cut_mask(mask_t mask_image, patch_t mask_patch, algorithm_statistics_t &statistics)
 {
 	if (patch_size != mask_patch.size)
 	{
@@ -136,7 +136,7 @@ void graphcut_t::compute_cut_mask(image_t mask_image, patch_t mask_patch, algori
 		for (int x = 0; x < patch_size; x++)
 		{
 			bool reachable = get_pixel_node(x, y).prev != NULL;
-			mask_image.set_pixel(x + mask_patch.x, y + mask_patch.y, reachable ? color_t(255, 255, 255) : color_t(0, 0, 0));
+			mask_image.set_pixel(x + mask_patch.x, y + mask_patch.y, reachable ? 255 : 0);
 		}
 	}
 }

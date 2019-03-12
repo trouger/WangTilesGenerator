@@ -51,10 +51,38 @@ bool writefile(const char *path, const color_t *data, int resolution)
 	return true;
 }
 
+bool writefile(const char *path, const color_t *data, const unsigned char *alpha, int resolution)
+{
+	FILE *f;
+	if (fopen_s(&f, path, "wb")) return false;
+	size_t pixel_count = resolution * resolution;
+	// python image is in reversed row order (top row first)
+	const color_t *pbuffer = data + pixel_count - resolution;
+	const unsigned char *palpha = alpha + pixel_count - resolution;
+	for (int i = 0; i < resolution; i++)
+	{
+		size_t r = 0;
+		for (int j = 0; j < resolution; j++)
+		{
+			r += fwrite((const void *)(pbuffer + j), sizeof(color_t), 1, f);
+			r += fwrite((const void *)(palpha + j), sizeof(unsigned char), 1, f);
+		}
+		if (r != resolution * 2)
+		{
+			fclose(f);
+			return false;
+		}
+		pbuffer -= resolution;
+		palpha -= resolution;
+	}
+	fclose(f);
+	return true;
+}
+
 struct resultset_t
 {
 	image_t packed_cornors;
-	image_t packed_cornors_mask;
+	mask_t packed_cornors_mask;
 	image_t packed_wang_tiles;
 	image_t graphcut_constraints;
 };
@@ -113,7 +141,7 @@ int generate_tiles_entry(int argc, const char *argv[])
 		std::cerr << "write output file failed\n";
 		return -1;
 	}
-	if (!writefile(outputpath_cornors, result.packed_cornors_mask.pixels, resolution))
+	if (!writefile(outputpath_cornors, result.packed_cornors.pixels, result.packed_cornors_mask.pixels, resolution))
 	{
 		std::cerr << "write output cornors file failed\n";
 		return -1;
