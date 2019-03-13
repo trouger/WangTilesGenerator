@@ -167,6 +167,16 @@ int generate_indexmap_entry(int argc, const char *argv[])
 
 	wangtiles_t wangtiles(image_t(), 2); // create a wangtiles object with a dummy source image
 	image_t indexmap = wangtiles.generate_indexmap(resolution);
+
+	// print statistics
+	std::vector<int> statistics(16);
+	for (int i = 0; i < resolution * resolution; i++)
+	{
+		statistics[indexmap.pixels[i].r]++;
+	}
+	for (int i = 0; i < statistics.size(); i++)
+		std::cout << "number of tile " << i << " generated: " << statistics[i] << std::endl;
+
 	if (!writefile(outputpath, indexmap.pixels, resolution))
 	{
 		std::cerr << "write output file failed\n";
