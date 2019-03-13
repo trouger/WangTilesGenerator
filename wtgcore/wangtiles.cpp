@@ -36,15 +36,16 @@ void generate_inv_packing_table(int inv_packing_table[], int num_colors)
 	}
 }
 
-wangtiles_t::wangtiles_t(image_t source, int num_colors)
-	:source_image(source), num_colors(num_colors), debug_tileindex(-1)
+wangtiles_t::wangtiles_t(image_t source, int num_colors, bool corner_tiles)
+	:is_corner_tiles(corner_tiles), source_image(source), num_colors(num_colors), debug_tileindex(-1)
 {
 	if (num_colors < 2 || num_colors > 4)
 	{
 		std::cerr << "num_colors must be 2, 3, or 4.\n";
 		exit(-1);
 	}
-	generate_inv_packing_table(inv_packing_table, num_colors);
+	if (is_corner_tiles)
+		generate_inv_packing_table(inv_packing_table, num_colors);
 }
 
 
@@ -102,7 +103,7 @@ void wangtiles_t::generate_packed_corners()
 				for (int cnw = 0; cnw < num_colors; cnw++)
 				{
 					int corners[4] = { csw, cse, cnw, cne };
-					int tileindex = inv_packing_table[(cne << 6) | (cse << 4) | (csw << 2) | cnw];
+					int tileindex = get_packing_tileindex(cne, cse, csw, cnw);
 					int row = tileindex / num_tiles;
 					int col = tileindex - row * num_tiles;
 					int ox = col * tile_size;
@@ -227,33 +228,94 @@ image_t wangtiles_t::generate_indexmap(int resolution)
 	image_t indexmap;
 	indexmap.init(resolution);
 
-	image_t cornermap;
-	cornermap.init(resolution + 1);
-	for (int y = 0; y < resolution; y++)
+	if (is_corner_tiles)
 	{
-		for (int x = 0; x < resolution; x++)
+		image_t cornermap;
+		cornermap.init(resolution + 1);
+		for (int y = 0; y < resolution; y++)
 		{
-			int colorindex = (int)((rand() / (float)(RAND_MAX + 1)) * num_colors);
-			cornermap.set_pixel(x, y, color_t(colorindex, 0, 0));
+			for (int x = 0; x < resolution; x++)
+			{
+				cornermap.set_pixel(x, y, color_t(random_color(), 0, 0));
+			}
+			cornermap.set_pixel(resolution, y, cornermap.get_pixel(0, y));
 		}
-		cornermap.set_pixel(resolution, y, cornermap.get_pixel(0, y));
-	}
-	for (int x = 0; x <= resolution; x++)
-		cornermap.set_pixel(x, resolution, cornermap.get_pixel(x, 0));
+		for (int x = 0; x <= resolution; x++)
+			cornermap.set_pixel(x, resolution, cornermap.get_pixel(x, 0));
 
-	for (int y = 0; y < resolution; y++)
+		for (int y = 0; y < resolution; y++)
+		{
+			for (int x = 0; x < resolution; x++)
+			{
+				int cne = cornermap.get_pixel(x + 1, y + 1).r;
+				int cse = cornermap.get_pixel(x + 1, y).r;
+				int csw = cornermap.get_pixel(x, y).r;
+				int cnw = cornermap.get_pixel(x, y + 1).r;
+				int tileindex = get_packing_tileindex(cne, cse, csw, cnw);
+				indexmap.set_pixel(x, y, color_t(tileindex, tileindex, tileindex));
+			}
+		}
+	}
+	else
 	{
+		std::vector<int> bottom(resolution);
+		std::vector<int> prev_row(resolution);
+		int leftmost_edge = -1;
+		int prev_edge = -1;
+		int s, w, n, e;
+		// first row
 		for (int x = 0; x < resolution; x++)
 		{
-			int cne = cornermap.get_pixel(x + 1, y + 1).r;
-			int cse = cornermap.get_pixel(x + 1, y).r;
-			int csw = cornermap.get_pixel(x, y).r;
-			int cnw = cornermap.get_pixel(x, y + 1).r;
-			int tileindex = inv_packing_table[(cne << 6) | (cse << 4) | (csw << 2) | cnw];
-			indexmap.set_pixel(x, y, color_t(tileindex, tileindex, tileindex));
+			bottom[x] = s = random_color();
+			w = x > 0 ? prev_edge : (leftmost_edge = random_color());
+			prev_row[x] = n = resolution > 1 ? random_color() : s;
+			prev_edge = e = x < resolution - 1 ? random_color() : leftmost_edge;
+			int tileindex = get_packing_tileindex(n, e, s, w);
+			indexmap.set_pixel(x, 0, color_t(tileindex, tileindex, tileindex));
+		}
+		// remaining rows
+		for (int y = 1; y < resolution; y++)
+		{
+			for (int x = 0; x < resolution; x++)
+			{
+				s = prev_row[x];
+				w = x > 0 ? prev_edge : (leftmost_edge = random_color());
+				prev_row[x] = n = y < resolution - 1 ? random_color() : bottom[x];
+				prev_edge = e = x < resolution - 1 ? random_color() : leftmost_edge;
+				int tileindex = get_packing_tileindex(n, e, s, w);
+				indexmap.set_pixel(x, 0, color_t(tileindex, tileindex, tileindex));
+			}
 		}
 	}
 	return indexmap;
+}
+
+int packing_index_1d(int e1, int e2)
+{
+	if (e1 == e2)
+		return e2 > 0 ? (e1 + 1) * (e1 + 1) - 2 : 0;
+	else if (e1 > e2)
+		return e2 > 0 ? e1 * e1 + 2 * e2 - 1 : (e1 + 1) * (e1 + 1) - 1;
+	else
+		return 2 * e1 + e2 * e2;
+}
+
+// for wang tiles it is (n, e, s, w), for corner tiles it is (ne, se, sw, nw)
+int wangtiles_t::get_packing_tileindex(int n, int e, int s, int w)
+{
+	if (is_corner_tiles)
+		return inv_packing_table[(n << 6) | (e << 4) | (s << 2) | w];
+	else
+	{
+		int row = packing_index_1d(s, n);
+		int col = packing_index_1d(w, e);
+		return row * num_colors * num_colors + col;
+	}
+}
+
+int wangtiles_t::random_color()
+{
+	return (int)((rand() / (float)(RAND_MAX + 1)) * num_colors);
 }
 
 void wangtiles_t::fill_graphcut_constraints(const int tile_size, image_t &graphcut_constraints)

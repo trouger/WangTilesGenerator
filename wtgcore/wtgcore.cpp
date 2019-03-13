@@ -106,7 +106,7 @@ resultset_t processimage(image_t image, int debug_tileindex)
 
 int print_usage_on_error()
 {
-	const char *usage_msg = "Usage:  wtgcore --tiles <resolution> <input-path> <output-path> <output-corners-path> <output-constraints-path> <debug-tile-index>\n"
+	const char *usage_msg = "Usage:  wtgcore --tiles <resolution> <input-path> <output-path> <output-corners-path> <output-constraints-path> [<debug-tile-index>]\n"
 							"     |  wtgcore --index <resolution> <output-path>\n";
 	std::cerr << usage_msg;
 	return -1;
