@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include <iostream>
+#include <ctime>
 #include "common_types.h"
 #include "wangtiles.h"
  
@@ -83,7 +84,6 @@ struct resultset_t
 {
 	image_t packed_corners;
 	mask_t packed_corners_mask;
-	image_t packed_wang_tiles;
 	image_t graphcut_constraints;
 };
 
@@ -99,14 +99,13 @@ resultset_t processimage(image_t image, int debug_tileindex)
 
 	result.packed_corners = wangtiles.get_packed_corners();
 	result.packed_corners_mask = wangtiles.get_packed_corners_mask();
-	result.packed_wang_tiles = wangtiles.get_packed_wang_tiles();
 	result.graphcut_constraints = wangtiles.get_graphcut_constraints();
 	return result;
 }
 
 int print_usage_on_error()
 {
-	const char *usage_msg = "Usage:  wtgcore --tiles <resolution> <input-path> <output-path> <output-corners-path> <output-constraints-path> [<debug-tile-index>]\n"
+	const char *usage_msg = "Usage:  wtgcore --tiles <resolution> <input-path> <output-path> <output-constraints-path> [<debug-tile-index>]\n"
 							"     |  wtgcore --index <resolution> <output-path>\n";
 	std::cerr << usage_msg;
 	return -1;
@@ -114,7 +113,7 @@ int print_usage_on_error()
 
 int generate_tiles_entry(int argc, const char *argv[])
 {
-	if (argc < 7) return print_usage_on_error();
+	if (argc < 6) return print_usage_on_error();
 	int resolution = std::atoi(argv[2]);
 	if (resolution <= 0 || (resolution & (resolution - 1)) != 0)
 	{
@@ -123,10 +122,9 @@ int generate_tiles_entry(int argc, const char *argv[])
 	}
 	const char *inputpath = argv[3];
 	const char *outputpath = argv[4];
-	const char *outputpath_corners = argv[5];
-	const char *outputpath_constraints = argv[6];
+	const char *outputpath_constraints = argv[5];
 	int debug_tileindex = -1;
-	if (argc > 7) debug_tileindex = std::atoi(argv[7]);
+	if (argc > 6) debug_tileindex = std::atoi(argv[6]);
 
 	image_t input;
 	input.resolution = resolution;
@@ -136,14 +134,9 @@ int generate_tiles_entry(int argc, const char *argv[])
 		return -1;
 	}
 	resultset_t result = processimage(input, debug_tileindex);
-	if (!writefile(outputpath, result.packed_wang_tiles.pixels, resolution))
+	if (!writefile(outputpath, result.packed_corners.pixels, result.packed_corners_mask.pixels, resolution))
 	{
 		std::cerr << "write output file failed\n";
-		return -1;
-	}
-	if (!writefile(outputpath_corners, result.packed_corners.pixels, result.packed_corners_mask.pixels, resolution))
-	{
-		std::cerr << "write output corners file failed\n";
 		return -1;
 	}
 	if (!writefile(outputpath_constraints, result.graphcut_constraints.pixels, result.graphcut_constraints.resolution))
@@ -187,6 +180,7 @@ int generate_indexmap_entry(int argc, const char *argv[])
 
 int main(int argc, const char *argv[])
 {
+	srand((unsigned int)time(NULL));
 	bool generate_indexmap = argc > 1 && strcmp(argv[1], "--index") == 0;
 	bool generate_tiles = argc > 1 && strcmp(argv[1], "--tiles") == 0;
 	if (generate_indexmap)

@@ -17,7 +17,6 @@ public:
 
 	image_t get_packed_corners() { return packed_corners; }
 	mask_t get_packed_corners_mask() { return packed_corners_mask; }
-	image_t get_packed_wang_tiles() { return packed_wang_tiles; }
 	image_t get_graphcut_constraints() { return graphcut_constraints; }
 
 	image_t generate_indexmap(int resolution);
@@ -40,7 +39,6 @@ private:
 	std::vector<patch_t> colored_patches_v;
 	image_t packed_corners;
 	mask_t packed_corners_mask;
-	image_t packed_wang_tiles;
 	image_t graphcut_constraints;
 
 	int debug_tileindex;

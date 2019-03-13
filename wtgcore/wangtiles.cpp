@@ -270,22 +270,6 @@ void wangtiles_t::generate_wang_tiles()
 
 		packed_corners_mask = upsample(packed_corners_mask);
 	}
-
-	// blend the two layers
-	std::cout << "blending layers\n";
-	packed_wang_tiles.clear();
-	packed_wang_tiles.init(resolution);
-	for (int y = 0; y < resolution; y++)
-	{
-		for (int x = 0; x < resolution; x++)
-		{
-			vector3f_t color0 = get_vector3f(source_image.get_pixel(x, y));
-			vector3f_t color1 = get_vector3f(packed_corners.get_pixel(x, y));
-			float mask = packed_corners_mask.get_pixel(x, y) / 255.0f;
-			vector3f_t color = color0 * (1.0f - mask) + color1 * mask;
-			packed_wang_tiles.set_pixel(x, y, get_color(color));
-		}
-	}
 }
 
 image_t wangtiles_t::generate_indexmap(int resolution)

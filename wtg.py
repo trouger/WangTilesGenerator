@@ -21,13 +21,13 @@ def main():
 	data = input.tobytes()
 	tmpinput = os.path.abspath(".\\input.img")
 	tmpoutput = os.path.abspath(".\\output.img")
-	tmpoutput_corners = os.path.abspath(".\\output_corners.img")
 	tmpoutput_constraints = os.path.abspath(".\\graphcut_constraints.img")
 	f = open(tmpinput, "wb")
 	f.write(data)
 	f.close()
 
-	command = ["exe_path(place holder)", "--tiles", str(resolution), tmpinput, tmpoutput, tmpoutput_corners, tmpoutput_constraints]
+	# invoke wtgcore.exe
+	command = ["exe_path(place holder)", "--tiles", str(resolution), tmpinput, tmpoutput, tmpoutput_constraints]
 	if len(sys.argv) > 2 and sys.argv[2] == '--debug':
 		core_executable = core_executable_debug
 		if len(sys.argv) > 3:
@@ -41,16 +41,16 @@ def main():
 	if returncode != 0:
 		raise Exception("wtgcore returns error")
 
+	# read packed corners with its mask
 	f = open(tmpoutput, "rb")
-	output = f.read()
+	packed_corners = f.read()
 	f.close()
-	output = Image.frombytes("RGB", (resolution, resolution), output)
+	packed_corners = Image.frombytes("RGBA", (resolution, resolution), packed_corners)
 
-	f = open(tmpoutput_corners, "rb")
-	output_corners = f.read()
-	f.close()
-	output_corners = Image.frombytes("RGBA", (resolution, resolution), output_corners)
+	# composite output wang tiles
+	output = Image.composite(packed_corners.convert("RGB"), input, packed_corners.getchannel("A"))
 
+	# read graphcut constraints for debugging output
 	f = open(tmpoutput_constraints, "rb")
 	graphcut_constraints = f.read()
 	f.close()
@@ -62,14 +62,13 @@ def main():
 	output.save(output_path)
 
 	output_path = fn + "_wangtiles_corners" + ext
-	output_corners.save(output_path)
+	packed_corners.save(output_path)
 
 	output_path = fn + "_wangtiles_graphcut_constraints" + ext
 	graphcut_constraints.save(output_path)
 
 	os.remove(tmpinput)
 	os.remove(tmpoutput)
-	os.remove(tmpoutput_corners)
 	os.remove(tmpoutput_constraints)
 
 
