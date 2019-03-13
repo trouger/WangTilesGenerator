@@ -20,6 +20,7 @@ public:
 	image_t get_graphcut_constraints() { return graphcut_constraints; }
 
 	image_t generate_indexmap(int resolution);
+	image_t generate_palette(int resolution);
 
 private:
 	patch_t random_non_overlapping_patch(int patch_size);

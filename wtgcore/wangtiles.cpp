@@ -339,6 +339,72 @@ image_t wangtiles_t::generate_indexmap(int resolution)
 	return indexmap;
 }
 
+template <typename _t>
+_t lerp(_t a, _t b, float k)
+{
+	return a * (1.0f - k) + b * k;
+}
+
+template <typename _t>
+_t smoothlerp(_t a, _t b, float k)
+{
+	k = -cos(3.1415926f * k) * 0.5f + 0.5f;
+	return lerp(a, b, k);
+}
+
+image_t wangtiles_t::generate_palette(const int resolution)
+{
+	const int num_tiles = num_colors * num_colors;
+	const int tile_size = resolution / num_tiles;
+	if (tile_size * num_tiles != resolution)
+	{
+		std::cerr << "resolution must be a multiple of num_colors * num_colors\n";
+		exit(-1);
+	}
+
+	if (is_corner_tiles)
+	{
+		return image_t(); // not implemented
+	}
+	else
+	{
+		const vector3f_t edgecolor_h[] = { get_vector3f(color_t(30, 129, 43)), get_vector3f(color_t(168, 44, 34)) };
+		const vector3f_t edgecolor_v[] = { get_vector3f(color_t(24, 98, 169)), get_vector3f(color_t(236, 178, 0)) };
+
+		image_t palette;
+		palette.init(resolution);
+		for (int n = 0; n < num_colors; n++) for (int e = 0; e < num_colors; e++) for (int s = 0; s < num_colors; s++) for (int w = 0; w < num_colors; w++)
+		{
+			int tileindex = get_packing_tileindex(n, e, s, w);
+			int row = tileindex / num_tiles;
+			int col = tileindex - row * num_tiles;
+			patch_t dest_patch;
+			dest_patch.x = col * tile_size;
+			dest_patch.y = row * tile_size;
+			dest_patch.size = tile_size;
+
+			for (int y = 0; y < tile_size; y++)
+			{
+				for (int x = 0; x < tile_size; x++)
+				{
+					float factor_h = (x + 0.5f) / tile_size;
+					float factor_v = (y + 0.5f) / tile_size;
+					vector3f_t color_h = smoothlerp(edgecolor_h[w], edgecolor_h[e], factor_h);
+					vector3f_t color_v = smoothlerp(edgecolor_v[s], edgecolor_v[n], factor_v);
+					factor_h = std::min(factor_h, 1.0f - factor_h);
+					factor_v = std::min(factor_v, 1.0f - factor_v);
+					float normalize_base = factor_h + factor_v;
+					factor_h /= normalize_base;
+					factor_v /= normalize_base;
+					vector3f_t color = factor_h < factor_v ? smoothlerp(color_h, color_v, factor_h) : smoothlerp(color_v, color_h, factor_v);
+					palette.set_pixel_in_patch(dest_patch, x, y, get_color(color));
+				}
+			}
+		}
+		return palette;
+	}
+}
+
 int packing_index_1d(int e1, int e2)
 {
 	if (e1 == e2)

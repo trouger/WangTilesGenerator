@@ -7,6 +7,8 @@
 #include "common_types.h"
 #include "wangtiles.h"
  
+#define NUM_COLORS		2
+#define CORNER_TILES	false
 
 color_t *readfile(const char *path, int resolution)
 {
@@ -91,7 +93,7 @@ resultset_t processimage(image_t image, int debug_tileindex)
 {
 	resultset_t result;
 
-	wangtiles_t wangtiles(image, 2, false);
+	wangtiles_t wangtiles(image, NUM_COLORS, CORNER_TILES);
 	wangtiles.set_debug_tileindex(debug_tileindex);
 	wangtiles.pick_colored_patches();
 	wangtiles.generate_packed_corners();
@@ -106,7 +108,8 @@ resultset_t processimage(image_t image, int debug_tileindex)
 int print_usage_on_error()
 {
 	const char *usage_msg = "Usage:  wtgcore --tiles <resolution> <input-path> <output-path> <output-constraints-path> [<debug-tile-index>]\n"
-							"     |  wtgcore --index <resolution> <output-path>\n";
+							"     |  wtgcore --index <resolution> <output-path>\n"
+							"     |  wtgcore --palette <resolution> <output-path>\n";
 	std::cerr << usage_msg;
 	return -1;
 }
@@ -158,7 +161,7 @@ int generate_indexmap_entry(int argc, const char *argv[])
 	}
 	const char *outputpath = argv[3];
 
-	wangtiles_t wangtiles(image_t(), 2, false); // create a wangtiles object with a dummy source image
+	wangtiles_t wangtiles(image_t(), NUM_COLORS, CORNER_TILES); // create a wangtiles object with a dummy source image
 	image_t indexmap = wangtiles.generate_indexmap(resolution);
 
 	// print statistics
@@ -178,15 +181,40 @@ int generate_indexmap_entry(int argc, const char *argv[])
 	return 0;
 }
 
+int generate_palette_entry(int argc, const char *argv[])
+{
+	if (argc != 4) return print_usage_on_error();
+	int resolution = std::atoi(argv[2]);
+	if (resolution <= 0)
+	{
+		std::cerr << "resolution is invalid\n";
+		return print_usage_on_error();
+	}
+	const char *outputpath = argv[3];
+
+	wangtiles_t wangtiles(image_t(), NUM_COLORS, CORNER_TILES); // create a wangtiles object with a dummy source image
+	image_t palette = wangtiles.generate_palette(resolution);
+
+	if (!writefile(outputpath, palette.pixels, resolution))
+	{
+		std::cerr << "write output file failed\n";
+		return -1;
+	}
+	return 0;
+}
+
 int main(int argc, const char *argv[])
 {
 	srand((unsigned int)time(NULL));
 	bool generate_indexmap = argc > 1 && strcmp(argv[1], "--index") == 0;
 	bool generate_tiles = argc > 1 && strcmp(argv[1], "--tiles") == 0;
+	bool generate_palette = argc > 1 && strcmp(argv[1], "--palette") == 0;
 	if (generate_indexmap)
 		return generate_indexmap_entry(argc, argv);
 	else if (generate_tiles)
 		return generate_tiles_entry(argc, argv);
+	else if (generate_palette)
+		return generate_palette_entry(argc, argv);
 	else
 		return print_usage_on_error();
 }
