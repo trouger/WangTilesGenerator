@@ -283,7 +283,7 @@ image_t wangtiles_t::generate_indexmap(int resolution)
 				prev_row[x] = n = y < resolution - 1 ? random_color() : bottom[x];
 				prev_edge = e = x < resolution - 1 ? random_color() : leftmost_edge;
 				int tileindex = get_packing_tileindex(n, e, s, w);
-				indexmap.set_pixel(x, 0, color_t(tileindex, tileindex, tileindex));
+				indexmap.set_pixel(x, y, color_t(tileindex, tileindex, tileindex));
 			}
 		}
 	}

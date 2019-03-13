@@ -91,7 +91,7 @@ resultset_t processimage(image_t image, int debug_tileindex)
 {
 	resultset_t result;
 
-	wangtiles_t wangtiles(image, 2);
+	wangtiles_t wangtiles(image, 2, false);
 	wangtiles.set_debug_tileindex(debug_tileindex);
 	wangtiles.pick_colored_patches();
 	wangtiles.generate_packed_corners();
@@ -165,7 +165,7 @@ int generate_indexmap_entry(int argc, const char *argv[])
 	}
 	const char *outputpath = argv[3];
 
-	wangtiles_t wangtiles(image_t(), 2); // create a wangtiles object with a dummy source image
+	wangtiles_t wangtiles(image_t(), 2, false); // create a wangtiles object with a dummy source image
 	image_t indexmap = wangtiles.generate_indexmap(resolution);
 
 	// print statistics
