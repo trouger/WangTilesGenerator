@@ -23,6 +23,7 @@ public:
 	image_t generate_indexmap(int resolution);
 
 private:
+	patch_t random_non_overlapping_patch(int patch_size);
 	int get_packing_tileindex(int n, int e, int s, int w);
 	int random_color();
 	void fill_graphcut_constraints(const int tile_size, image_t &constraints);
@@ -35,7 +36,8 @@ private:
 	int num_colors;
 	int inv_packing_table[256];
 
-	std::vector<patch_t> colored_patches;
+	std::vector<patch_t> colored_patches_h;
+	std::vector<patch_t> colored_patches_v;
 	image_t packed_corners;
 	mask_t packed_corners_mask;
 	image_t packed_wang_tiles;
