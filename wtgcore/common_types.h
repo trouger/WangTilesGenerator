@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <algorithm>
 
 struct color_t
 {
@@ -18,6 +19,13 @@ struct color_t
 	}
 
 	inline bool operator != (const color_t &other) { return !(*this == other); }
+};
+
+struct patch_t
+{
+	int x;
+	int y;
+	int size;
 };
 
 template <typename _p_t>
@@ -51,17 +59,20 @@ struct generic_image_t
 	{
 		pixels[y * resolution + x] = color;
 	}
+
+	_pixel_t get_pixel_in_patch(const patch_t &patch, int x, int y)
+	{
+		return get_pixel(patch.x + x, patch.y + y);
+	}
+
+	void set_pixel_in_patch(const patch_t &patch, int x, int y, _pixel_t color)
+	{
+		set_pixel(patch.x + x, patch.y + y, color);
+	}
 };
 
 typedef generic_image_t<color_t> image_t;
 typedef generic_image_t<unsigned char> mask_t;
-
-struct patch_t
-{
-	int x;
-	int y;
-	int size;
-};
 
 template <typename value_t>
 struct vector3_t
@@ -105,9 +116,11 @@ inline vector3f_t get_vector3f(color_t c)
 {
 	return vector3f_t(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f);
 }
+
+inline int _color_from_float(float x) { return std::max(std::min(int(x * 255.0f), 255), 0); }
 inline color_t get_color(vector3f_t v)
 {
-	return color_t(int(v.x * 255.0f), int(v.y * 255.0f), int(v.z * 255.0f));
+	return color_t(_color_from_float(v.x), _color_from_float(v.y), _color_from_float(v.z));
 }
 
 #define CONSTRAINT_COLOR_SOURCE		color_t(255, 0, 0)
