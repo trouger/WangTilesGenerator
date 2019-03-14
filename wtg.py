@@ -47,8 +47,13 @@ def main():
 	f.close()
 	packed_corners = Image.frombytes("RGBA", (resolution, resolution), packed_corners)
 
+	# process mask
+	mask = packed_corners.getchannel("A")
+	#mask = mask.filter(ImageFilter.GaussianBlur(mask.height / 80.0))
+	packed_corners.putalpha(mask)
+
 	# composite output wang tiles
-	output = Image.composite(packed_corners.convert("RGB"), input, packed_corners.getchannel("A"))
+	output = Image.composite(packed_corners.convert("RGB"), input, mask)
 
 	# read graphcut constraints for debugging output
 	f = open(tmpoutput_constraints, "rb")
