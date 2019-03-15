@@ -121,7 +121,7 @@ int generate_tiles_entry(int argc, const char *argv[])
 	if (resolution <= 0 || (resolution & (resolution - 1)) != 0)
 	{
 		std::cerr << "resolution is invalid, must be a POT\n";
-		return print_usage_on_error();
+		return -1;
 	}
 	const char *inputpath = argv[3];
 	const char *outputpath = argv[4];

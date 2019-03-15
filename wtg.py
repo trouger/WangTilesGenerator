@@ -49,7 +49,7 @@ def main():
 
 	# process mask
 	mask = packed_corners.getchannel("A")
-	#mask = mask.filter(ImageFilter.GaussianBlur(mask.height / 80.0))
+	mask = mask.filter(ImageFilter.GaussianBlur(2))
 	packed_corners.putalpha(mask)
 
 	# composite output wang tiles
