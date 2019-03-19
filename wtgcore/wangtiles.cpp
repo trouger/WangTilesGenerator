@@ -312,27 +312,47 @@ image_t wangtiles_t::generate_indexmap(int resolution)
 		int leftmost_edge = -1;
 		int prev_edge = -1;
 		int s, w, n, e;
-		// first row
-		for (int x = 0; x < resolution; x++)
-		{
-			bottom[x] = s = random_color();
-			w = x > 0 ? prev_edge : (leftmost_edge = random_color());
-			prev_row[x] = n = resolution > 1 ? random_color() : s;
-			prev_edge = e = x < resolution - 1 ? random_color() : leftmost_edge;
-			int tileindex = get_packing_tileindex(n, e, s, w);
-			indexmap.set_pixel(x, 0, color_t(tileindex, tileindex, tileindex));
-		}
-		// remaining rows
-		for (int y = 1; y < resolution; y++)
+		int retry = 0;
+		const int maxretry = 100;
+
+		for (int y = 0; y < resolution; y++)
 		{
 			for (int x = 0; x < resolution; x++)
 			{
-				s = prev_row[x];
+				s = y == 0 ? (bottom[x] = random_color()) : prev_row[x];
 				w = x > 0 ? prev_edge : (leftmost_edge = random_color());
-				prev_row[x] = n = y < resolution - 1 ? random_color() : bottom[x];
-				prev_edge = e = x < resolution - 1 ? random_color() : leftmost_edge;
+				n = y < resolution - 1 ? random_color() : bottom[x];
+				e = x < resolution - 1 ? random_color() : leftmost_edge;
 				int tileindex = get_packing_tileindex(n, e, s, w);
+				// check if this tile duplicates a neighbor
+				bool duplicate = false;
+				for (int i = 0; i < 9; i++)
+				{
+					int ox = i % 3 - 1;
+					int oy = i / 3 - 1;
+					if (ox == 0 && oy == 0) continue;
+					if (y < resolution - 1 && oy > 0) continue;
+					if (y == 0 && oy < 0) continue;
+					if (x == 0 && oy == 0 && ox < 0) continue;
+					if (x < resolution - 1 && oy == 0 && ox > 0) continue;
+					int neighbor = indexmap.get_pixel_wrapping(x + ox, y + oy).r;
+					if (neighbor == tileindex) 
+					{
+						duplicate = true;
+						break;
+					}
+				}
+				if (duplicate && retry++ < maxretry)
+				{
+					x--;
+					continue;
+				}
+				if (retry > maxretry)
+					std::cout << "A tile is left duplicated with neighbor after " << maxretry << " retries\n";
+				retry = 0;
 				indexmap.set_pixel(x, y, color_t(tileindex, tileindex, tileindex));
+				prev_row[x] = n;
+				prev_edge = e;
 			}
 		}
 	}

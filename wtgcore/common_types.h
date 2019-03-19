@@ -69,6 +69,13 @@ struct generic_image_t
 	{
 		set_pixel(patch.x + x, patch.y + y, color);
 	}
+
+	_pixel_t get_pixel_wrapping(int x, int y) const
+	{
+		x = x % resolution;
+		y = y % resolution;
+		return get_pixel(x < 0 ? x + resolution : x, y < 0 ? y + resolution : y);
+	}
 };
 
 typedef generic_image_t<color_t> image_t;
